@@ -5,47 +5,69 @@ const CODE_DOWN = 40;
 const KEYCODE_ARROW = [CODE_RIGHT, CODE_LEFT, CODE_DOWN]; // right left down
 const mainBoard = document.getElementById('board');
 const ctx = mainBoard.getContext('2d');
+const defaultPos = function() {
+    return { x: 15, y: 0 };
+}
 
-var TShape = {
-    pos: { x: 0, y: 0 },
-    fillStyle: 'red',
-    matrix: [
+
+var TShape = function() {
+    this.pos = defaultPos();
+    this.fillStyle = 'red';
+    this.strokeStyle = "#000000";
+    this.matrix = [
         [1, 1, 1],
         [0, 1, 0]
     ]
 };
 
-var LShape = {
-    pos: { x: 2, y: 0 },
-    fillStyle: 'blue',
-    matrix: [
+var LShape = function() {
+    this.pos = defaultPos();
+    this.fillStyle = 'white';
+    this.strokeStyle = "#000000";
+    this.matrix = [
         [1, 1, 1],
         [1, 0, 0]
     ]
 };
-var CubShape = {
-    pos: { x: 10, y: 0 },
-    fillStyle: 'yellow',
-    matrix: [
+var CubShape = function() {
+    this.pos = defaultPos();
+    this.fillStyle = 'yellow';
+    this.strokeStyle = "#000000";
+    this.matrix = [
         [1, 1],
         [1, 1]
     ]
 };
+var RodShape = function() {
+    this.pos = defaultPos();
+    this.fillStyle = 'green';
+    this.strokeStyle = "#000000";
+    this.matrix = [
+        [1, 1,1,1]
+    ]
+};
 
 
-var currentShape = CubShape;
+var currentShape = new CubShape();
 
 init();
 
 function init() {
+    ctx.scale(SCALE, SCALE);
     initBoard();
     setupEvents();
 }
 
 function initBoard() {
-    ctx.fillStyle = "rgba(0, 0, 200, 0.3)";
+    ctx.fillStyle = "black";
     ctx.fillRect(0, 0, mainBoard.width, mainBoard.height);
-    ctx.scale(SCALE, SCALE);
+}
+
+function newPiece() {
+	var collide =  currentShape.pos.y >= (mainBoard.height/SCALE) ;
+    if (collide) {
+        toogleShape();
+    }
 }
 
 function setupEvents() {
@@ -54,7 +76,10 @@ function setupEvents() {
     window.setInterval(() => window.requestAnimationFrame(update), 30);
 
     //ove down current shape
-    window.setInterval(() => currentShape.pos.y++, 1000);
+    window.setInterval(() => {
+        currentShape.pos.y++;
+        newPiece()
+    }, 1000);
 
 
     window.addEventListener('keydown', function(evt) {
@@ -67,12 +92,41 @@ function setupEvents() {
 }
 
 function update() {
-    draw(TShape);
-    draw(CubShape);
-    draw(LShape);
+    initBoard();
+    draw(currentShape);
 }
 
+function toogleShape() {
+    var num = Math.floor(Math.random() * (5 - 1)) + 1;
+    switch (num) {
+        case 1:
+            currentShape = new TShape();
+            break;
+
+        case 2:
+            currentShape = new CubShape();
+            break;
+
+        case 3:
+            currentShape = new LShape();
+            break;
+
+        case 4:
+            currentShape = new RodShape();
+            break;
+
+        default:
+            currentShape = null;
+            break;
+    }
+}
+
+
 function draw(shape) {
+
+    if (shape == null)
+        return;
+
     ctx.fillStyle = shape.fillStyle;
     var pos = shape.pos;
     var matrix = shape.matrix;
@@ -89,6 +143,7 @@ function draw(shape) {
 function handleKeyUp(code) {
     switch (code) {
         case CODE_DOWN:
+            newPiece()
             currentShape.pos.y++;
             break;
 
@@ -97,7 +152,10 @@ function handleKeyUp(code) {
             break;
 
         case CODE_RIGHT:
-            currentShape.pos.x++;
+            if( (currentShape.pos.x + 1 ) * SCALE + SCALE < mainBoard.width )
+            {
+               currentShape.pos.x++;
+            }
             break;
 
         default:
